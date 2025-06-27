@@ -1,0 +1,138 @@
+
+
+# 
+#  ▄█        ▄█     ▄██████▄     ▄█    █▄        ███       ▄█        ▄██████▄     ▄██████▄   ▄█  ███▄▄▄▄   
+# ███       ███    ███    ███   ███    ███   ▀█████████▄  ███       ███    ███   ███    ███ ███  ███▀▀▀██▄ 
+# ███       ███▌   ███    █▀    ███    ███      ▀███▀▀██  ███       ███    ███   ███    █▀  ███▌ ███   ███ 
+# ███       ███▌  ▄███         ▄███▄▄▄▄███▄▄     ███   ▀  ███       ███    ███  ▄███        ███▌ ███   ███ 
+# ███       ███▌ ▀▀███ ████▄  ▀▀███▀▀▀▀███▀      ███      ███       ███    ███ ▀▀███ ████▄  ███▌ ███   ███ 
+# ███       ███    ███    ███   ███    ███       ███      ███       ███    ███   ███    ███ ███  ███   ███ 
+# ███▌    ▄ ███    ███    ███   ███    ███       ███      ███▌    ▄ ███    ███   ███    ███ ███  ███   ███ 
+# █████▄▄██ █▀     ████████▀    ███    █▀       ▄████▀    █████▄▄██  ▀██████▀    ████████▀  █▀    ▀█   █▀                                                                                                  
+#                
+                    # Copyright 2025 itz_intellij
+# LightLogin Configuration
+
+# Placeholders
+
+# %prefix% - Plugin Prefix
+# %server% - Server Name
+# %version% - Plugin Version     
+# %date% - Current Date
+# %player% - Player Name
+# %op% - OP Name
+# %uuid% - Player UUID
+# %discord% - Player Discord ID
+# %ip% - Player IP
+# %port% - Player Port
+# %world% - Player World
+
+# Database settings
+database:
+  # H2 database file will be stored in plugins/LightLogin/data.mv.db
+  type: H2
+  # MySQL configuration (uncomment and configure if using MySQL)
+  # type: MYSQL
+  # host: localhost
+  # database: minecraft
+  # username: user
+  # password: password
+
+# Session settings
+session:
+  enabled: true
+  duration: 2592000  # 30 days in seconds
+  check-ip: false    # If true, session is only valid from the same IP
+
+# Discord integration
+discord:
+  enabled: false
+  # Bot token from Discord Developer Portal
+  token: "YOUR_DISCORD_BOT_TOKEN"
+  # Your Discord server ID (right-click server name -> Copy Server ID)
+  guild-id: "YOUR_DISCORD_SERVER_ID"
+  # Channel where verification messages will be sent
+  verification-channel: "verification"
+  # Role to assign after successful verification
+  verified-role: "Verified"
+  # Whether to require verification to join the server
+  require-verification: true
+  # Command prefix for Discord bot commands (e.g., !verify)
+  command-prefix: "!"
+
+# Messages
+messages:
+  prefix: "&8[&aLightLogin&8] &7"
+  not-logged-in: "&cYou must be logged in to do that!"
+  already-logged-in: "&aYou are already logged in!"
+  login-required: "&cPlease login first using /login <password>"
+  register-required: "&cPlease register first using /register <password> <confirmPassword>"
+  login-success: "&aSuccessfully logged in!"
+  login-failed: "&cIncorrect password!"
+  register-success: "&aSuccessfully registered and logged in!"
+  register-failed: "&cFailed to register. Please try again later."
+  password-mismatch: "&cPasswords do not match!"
+  password-too-short: "&cPassword must be at least 6 characters long!"
+  # Discord related messages
+  discord-linked: "&aSuccessfully linked your Discord account!"
+  discord-link-failed: "&cFailed to link Discord account. Please try again."
+  discord-unlinked: "&aSuccessfully unlinked your Discord account!"
+  discord-not-linked: "&cYour account is not linked to Discord!"
+  discord-verification-sent: "&aVerification code sent to your DMs! Check your Discord messages."
+  discord-verification-failed: "&cFailed to send verification code. Please try again."
+  discord-invalid-username: "&cInvalid Discord username format. Please use: Username#1234"
+  discord-already-linked: "&cThis Discord account is already linked to another Minecraft account."
+  discord-verify-instructions: "&aTo verify your account, join our Discord server and use the command: &e/verify <code>&a\n&7Your verification code is: &e%code%"
+  discord-verify-success: "&aYour Discord account has been successfully verified!"
+  discord-verify-failed: "&cVerification failed. The code is invalid or has expired."
+  password-reset-requested: "&aA password reset code has been sent to your Discord DMs. Check your messages!"
+  password-reset-dm: "**\u26A1 Password Reset Request**\n\nYour password reset code is: `%code%`\n\nUse this command in-game to reset your password:\n`/pf %code% <newpassword>`\n\nThis code will expire in 10 minutes."
+  password-reset-dm-failed: "\u274C Could not send you a DM. Please enable DMs from server members and try again."
+  password-reset-success: "&aYour password has been successfully reset!"
+  password-reset-invalid-code: "&cInvalid or expired reset code. Please request a new one."
+  password-reset-not-linked: "&cYour Minecraft account is not linked to a Discord account."
+  password-reset-usage: "&cUsage: /pf <code> <newpassword>"
+  password-reset-channel-notice: "%user% Please enable DMs from server members to receive your password reset code."
+
+# Protection settings
+protection:
+  prevent-movement: true
+  prevent-chat: true
+  prevent-commands: true
+  prevent-damage: true
+  prevent-block-break: true
+  prevent-block-place: true
+  prevent-item-drop: true
+  prevent-item-pickup: true
+  prevent-inventory-interaction: true
+
+# Auto-login settings
+auto-login:
+  enabled: true
+  # Time in seconds before auto-kick if not logged in
+  login-timeout: 60
+  # Allow auto-login from the same IP
+  allow-ip-auto-login: true
+  # Require re-login after server restart
+  persist-across-restart: true
+
+# Security settings
+security:
+  # Force players to use strong passwords (requires at least one number and one special character)
+  strong-passwords: true
+  # Maximum login attempts before kicking the player
+  max-login-attempts: 5
+  # Time in minutes to block login attempts after reaching max attempts
+  login-attempts-timeout: 15
+  # Log failed login attempts to console
+  log-failed-attempts: true
+
+# Update checker
+update-checker:
+  enabled: true
+  # Check for updates on plugin enable
+  check-on-enable: true
+  # Notify OPs about updates
+  notify-ops: true
+  # Download updates automatically (requires proper permissions)
+  auto-download: false

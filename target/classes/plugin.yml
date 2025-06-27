@@ -1,0 +1,61 @@
+name: LightLogin
+version: 1.0
+main: com.lightlogin.LightLogin
+api-version: '1.20'
+description: A secure login system with Discord integration
+author: itz_intellij
+website: https://github.com/9r3a/LightLogin
+
+commands:
+  register:
+    description: Register a new account
+    usage: /register <password> <confirmPassword>
+    aliases: [reg]
+  login:
+    description: Login to your account
+    usage: /login <password>
+    aliases: [l]
+  changepassword:
+    description: Change your password
+    usage: /changepassword <oldPassword> <newPassword>
+    aliases: [cpw, changepw]
+  discord:
+    description: Link your Discord account
+    usage: /discord link|unlink [discord-username]
+    aliases: [dc]
+  passwordforget:
+    description: Request or verify a password reset
+    usage: /passwordforget | /passwordforget <code> <newpassword>
+    aliases: [pf]
+
+permissions:
+  lightlogin.user:
+    description: Default permissions for regular users
+    default: true
+    children:
+      lightlogin.command.login: true
+      lightlogin.command.register: true
+      lightlogin.command.changepassword: true
+      lightlogin.command.discord: true
+
+  lightlogin.admin:
+    description: Admin permissions for LightLogin
+    default: op
+    children:
+      lightlogin.user: true
+      lightlogin.admin.reload: true
+      lightlogin.admin.manage: true
+
+  # Command permissions
+  lightlogin.command.login:
+    description: Allows using the /login command
+    default: true
+  lightlogin.command.register:
+    description: Allows using the /register command
+    default: true
+  lightlogin.command.changepassword:
+    description: Allows using the /changepassword command
+    default: true
+  lightlogin.command.discord:
+    description: Allows using the /discord command
+    default: true
