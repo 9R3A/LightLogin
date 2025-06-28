@@ -13,7 +13,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
-import org.geysermc.floodgate.api.FloodgateApi;
+// Floodgate API is optional - checked at runtime using reflection
 
 import java.util.HashSet;
 import java.util.Set;
@@ -48,8 +48,31 @@ public class PlayerListener implements Listener {
     
     private boolean isBedrockPlayer(Player player) {
         try {
-            return Bukkit.getPluginManager().getPlugin("floodgate") != null && 
-                   FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId());
+            // Check if Floodgate plugin is installed and loaded
+            if (Bukkit.getPluginManager().getPlugin("floodgate") == null) {
+                return false;
+            }
+            
+            // Use reflection to check if player is from Bedrock
+            try {
+                // Get Floodgate API class
+                Class<?> floodgateApiClass = Class.forName("org.geysermc.floodgate.api.FloodgateApi");
+                // Get getInstance() method
+                java.lang.reflect.Method getInstanceMethod = floodgateApiClass.getMethod("getInstance");
+                // Invoke getInstance()
+                Object floodgateApi = getInstanceMethod.invoke(null);
+                // Get isFloodgatePlayer method
+                java.lang.reflect.Method isFloodgatePlayerMethod = floodgateApiClass.getMethod("isFloodgatePlayer", java.util.UUID.class);
+                // Call isFloodgatePlayer with player's UUID
+                return (boolean) isFloodgatePlayerMethod.invoke(floodgateApi, player.getUniqueId());
+            } catch (ClassNotFoundException e) {
+                plugin.getLogger().info("Floodgate API not found. Bedrock support disabled.");
+                plugin.getLogger().info("To enable Bedrock support, install Floodgate on your server.");
+                return false;
+            } catch (Exception e) {
+                plugin.getLogger().warning("Error checking Bedrock player status: " + e.getMessage());
+                return false;
+            }
         } catch (Exception e) {
             plugin.getLogger().warning("Error checking if player is from Bedrock: " + e.getMessage());
             return false;
@@ -61,7 +84,7 @@ public class PlayerListener implements Listener {
         if (!databaseManager.isPlayerRegistered(uuid)) {
             // Generate a random secure password for the Bedrock player
             String password = generateRandomPassword();
-            if (databaseManager.registerPlayer(uuid, player.getName(), password, ipAddress)) {
+            if (databaseManager.registerPlayer(player, password)) {
                 player.sendMessage(plugin.getConfig().getString(
                     "messages.bedrock-auto-register", 
                     "§aWelcome Bedrock player! You've been automatically registered."));

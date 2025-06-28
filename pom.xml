@@ -34,6 +34,7 @@
             <id>central</id>
             <url>https://repo.maven.apache.org/maven2</url>
         </repository>
+
     </repositories>
 
     <dependencies>
@@ -72,13 +73,12 @@
             <version>0.4</version>
         </dependency>
         
-        <!-- Geyser-Floodgate API for Bedrock support -->
-        <dependency>
-            <groupId>org.geysermc.floodgate</groupId>
-            <artifactId>floodgate-api</artifactId>
-            <version>2.2.0-SNAPSHOT</version>
-            <scope>provided</scope>
-        </dependency>
+        <!-- 
+            Note: For Bedrock support, install Floodgate on your server.
+            Download from: https://ci.opencollab.dev/job/GeyserMC/job/Floodgate/job/master/
+            and place in the server's plugins folder.
+            Bedrock support will be automatically enabled if Floodgate is present.
+        -->
     </dependencies>
 
     <build>
