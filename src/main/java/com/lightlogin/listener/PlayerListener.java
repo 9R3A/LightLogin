@@ -2,6 +2,7 @@ package com.lightlogin.listener;
 
 import com.lightlogin.LightLogin;
 import com.lightlogin.database.DatabaseManager;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,6 +13,7 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,19 +36,68 @@ public class PlayerListener implements Listener {
         String ipAddress = player.getAddress() != null ? 
                          player.getAddress().getAddress().getHostAddress() : "unknown";
 
+        // Handle Bedrock players
+        if (isBedrockPlayer(player)) {
+            handleBedrockPlayer(player, uuid, ipAddress);
+            return;
+        }
+
+        // Handle Java players
+        handleJavaPlayer(player, uuid, ipAddress);
+    }
+    
+    private boolean isBedrockPlayer(Player player) {
+        try {
+            return Bukkit.getPluginManager().getPlugin("floodgate") != null && 
+                   FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId());
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error checking if player is from Bedrock: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    private void handleBedrockPlayer(Player player, UUID uuid, String ipAddress) {
+        // Auto-register Bedrock players if not registered
+        if (!databaseManager.isPlayerRegistered(uuid)) {
+            // Generate a random secure password for the Bedrock player
+            String password = generateRandomPassword();
+            if (databaseManager.registerPlayer(uuid, player.getName(), password, ipAddress)) {
+                player.sendMessage(plugin.getConfig().getString(
+                    "messages.bedrock-auto-register", 
+                    "§aWelcome Bedrock player! You've been automatically registered."));
+                setLoggedIn(uuid, true);
+            } else {
+                player.kickPlayer(plugin.getConfig().getString(
+                    "messages.registration-error",
+                    "§cFailed to register your account. Please contact an administrator."));
+            }
+        } else {
+            // Auto-login Bedrock players
+            setLoggedIn(uuid, true);
+            player.sendMessage(plugin.getConfig().getString(
+                "messages.bedrock-auto-login",
+                "§aWelcome back, Bedrock player! You've been automatically logged in."));
+        }
+        databaseManager.updateLastLogin(uuid, ipAddress);
+    }
+    
+    private void handleJavaPlayer(Player player, UUID uuid, String ipAddress) {
         // Check if player is registered
         if (!databaseManager.isPlayerRegistered(uuid)) {
             // Player needs to register
-            player.sendMessage("§aWelcome! Please register using /register <password> <confirmPassword>");
+            player.sendMessage(plugin.getConfig().getString(
+                "messages.register-prompt",
+                "§aWelcome! Please register using /register <password> <confirmPassword>"));
         } else {
-            // Check for auto-login
-            // Check if auto-login is enabled and IP matches if required
+            // Check for auto-login if enabled
             if (plugin.getConfig().getBoolean("auto-login.enabled", true)) {
                 boolean checkIp = plugin.getConfig().getBoolean("session.check-ip", false);
                 
                 if (databaseManager.hasValidSession(uuid, ipAddress, checkIp)) {
                     setLoggedIn(uuid, true);
-                    player.sendMessage(plugin.getConfig().getString("messages.auto-login", "§aAutomatically logged in!"));
+                    player.sendMessage(plugin.getConfig().getString(
+                        "messages.auto-login", 
+                        "§aAutomatically logged in!"));
                     
                     // Update last login time
                     databaseManager.updateLastLogin(uuid, ipAddress);
@@ -54,11 +105,24 @@ public class PlayerListener implements Listener {
                 }
             }
             
-            player.sendMessage(plugin.getConfig().getString("messages.login-required", "§aWelcome back! Please login using /login <password>"));
+            player.sendMessage(plugin.getConfig().getString(
+                "messages.login-required", 
+                "§aWelcome back! Please login using /login <password>"));
         }
 
         // Save/update IP and last login
         databaseManager.updateLastLogin(uuid, ipAddress);
+    }
+    
+    private String generateRandomPassword() {
+        // Generate a secure random password for Bedrock players
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+        StringBuilder sb = new StringBuilder(16);
+        for (int i = 0; i < 16; i++) {
+            int index = (int)(Math.random() * chars.length());
+            sb.append(chars.charAt(index));
+        }
+        return sb.toString();
     }
 
     @EventHandler
