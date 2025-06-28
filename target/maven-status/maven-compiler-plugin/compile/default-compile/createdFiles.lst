@@ -1,0 +1,9 @@
+com\lightlogin\database\DatabaseMigrator.class
+com\lightlogin\command\PasswordForgetCommand.class
+com\lightlogin\command\DiscordLinkCommand.class
+com\lightlogin\listener\PlayerListener.class
+com\lightlogin\command\LoginCommand.class
+com\lightlogin\database\DatabaseManager.class
+com\lightlogin\discord\JDAIntegration.class
+com\lightlogin\command\RegisterCommand.class
+com\lightlogin\LightLogin.class

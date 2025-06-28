@@ -1,7 +1,8 @@
 C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\command\DiscordLinkCommand.java
 C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\command\RegisterCommand.java
 C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\listener\PlayerListener.java
-C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\discord\DiscordBot.java
+C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\database\DatabaseMigrator.java
+C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\discord\JDAIntegration.java
 C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\command\LoginCommand.java
 C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\database\DatabaseManager.java
 C:\Users\dodow\Desktop\9R3AStation\LightLogin\src\main\java\com\lightlogin\command\PasswordForgetCommand.java

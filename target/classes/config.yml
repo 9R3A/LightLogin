@@ -110,7 +110,7 @@ protection:
 auto-login:
   enabled: true
   # Time in seconds before auto-kick if not logged in
-  login-timeout: 60
+  login-timeout: 120
   # Allow auto-login from the same IP
   allow-ip-auto-login: true
   # Require re-login after server restart

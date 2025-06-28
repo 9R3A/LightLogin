@@ -7,11 +7,14 @@ import org.mindrot.jbcrypt.BCrypt;
 import java.sql.*;
 import java.util.UUID;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseManager {
+    private static final Logger logger = Logger.getLogger("LightLogin");
     private final LightLogin plugin;
     private Connection connection;
     private final String DB_URL = "jdbc:h2:./plugins/LightLogin/data;MODE=MySQL";
+    private DatabaseMigrator migrator;
     
     public DatabaseManager(LightLogin plugin) {
         this.plugin = plugin;
@@ -21,51 +24,24 @@ public class DatabaseManager {
         try {
             Class.forName("org.h2.Driver");
             connection = DriverManager.getConnection(DB_URL);
-            createTables();
+            
+            // Initialize migrator and run migrations
+            this.migrator = new DatabaseMigrator(plugin, this);
+            migrator.migrate();
+            
+            // Create any additional tables not covered by migrations
+            createAdditionalTables();
         } catch (ClassNotFoundException | SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to initialize database", e);
+            logger.log(Level.SEVERE, "Failed to initialize database", e);
         }
     }
-
-    private void createTables() {
+    
+    private void createAdditionalTables() {
+        // Any additional tables that aren't in the main schema can go here
         try (Statement stmt = connection.createStatement()) {
-            // Players table
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS players (
-                    uuid VARCHAR(36) PRIMARY KEY,
-                    username VARCHAR(16) NOT NULL,
-                    password_hash VARCHAR(100) NOT NULL,
-                    discord_id VARCHAR(20),
-                    last_login TIMESTAMP,
-                    ip_address VARCHAR(45),
-                    is_verified BOOLEAN DEFAULT FALSE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """);
-
-            
-            // Sessions table for auto-login
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS sessions (
-                    uuid VARCHAR(36) PRIMARY KEY,
-                    token VARCHAR(100) NOT NULL,
-                    expires_at TIMESTAMP NOT NULL,
-                    FOREIGN KEY (uuid) REFERENCES players(uuid) ON DELETE CASCADE
-                )
-            """);
-            
-            // Discord verification codes
-            stmt.execute("""
-                CREATE TABLE IF NOT EXISTS discord_codes (
-                    code VARCHAR(10) PRIMARY KEY,
-                    uuid VARCHAR(36) NOT NULL,
-                    expires_at TIMESTAMP NOT NULL,
-                    FOREIGN KEY (uuid) REFERENCES players(uuid) ON DELETE CASCADE
-                )
-            """);
-            
+            // Add any additional table creation statements here if needed
         } catch (SQLException e) {
-            plugin.getLogger().log(Level.SEVERE, "Failed to create tables", e);
+            logger.log(Level.SEVERE, "Failed to create additional tables", e);
         }
     }
 

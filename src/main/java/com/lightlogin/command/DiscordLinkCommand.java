@@ -1,7 +1,7 @@
 package com.lightlogin.command;
 
 import com.lightlogin.LightLogin;
-import com.lightlogin.discord.DiscordBot;
+import com.lightlogin.discord.JDAIntegration;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -13,11 +13,30 @@ import java.util.UUID;
 
 public class DiscordLinkCommand implements CommandExecutor {
     private final LightLogin plugin;
-    private final DiscordBot discordBot;
+    private final JDAIntegration discordBot;
 
-    public DiscordLinkCommand(LightLogin plugin, DiscordBot discordBot) {
+    public DiscordLinkCommand(LightLogin plugin, JDAIntegration discordBot) {
         this.plugin = plugin;
         this.discordBot = discordBot;
+    }
+
+    private String generateVerificationCode(UUID playerUuid) {
+        // Generate a random 6-digit code
+        int code = 100000 + new java.util.Random().nextInt(900000);
+        String codeStr = String.valueOf(code);
+        
+        // Store the code in the database
+        String sql = "INSERT INTO verification_codes (code, player_uuid, expires_at) VALUES (?, ?, DATE_ADD(NOW(), INTERVAL 10 MINUTE))";
+        try (var conn = plugin.getDatabaseManager().getConnection();
+             var stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, codeStr);
+            stmt.setString(2, playerUuid.toString());
+            stmt.executeUpdate();
+            return codeStr;
+        } catch (Exception e) {
+            plugin.getLogger().severe("Failed to generate verification code: " + e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -28,78 +47,52 @@ public class DiscordLinkCommand implements CommandExecutor {
         }
 
         Player player = (Player) sender;
-        UUID uuid = player.getUniqueId();
 
         if (args.length < 1) {
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                plugin.getConfig().getString("messages.prefix") + 
-                "&cUsage: /discord <link|unlink> [discord-username]"));
+                plugin.getConfig().getString("messages.prefix", "&7[LightLogin] &c") + 
+                "Usage: /discord <link|unlink>"));
             return true;
         }
 
         if (args[0].equalsIgnoreCase("link")) {
-            if (args.length < 2) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                    plugin.getConfig().getString("messages.prefix") + 
-                    "&cUsage: /discord link <discord-username>"));
+            if (!plugin.isDiscordEnabled()) {
+                player.sendMessage(ChatColor.RED + "Discord integration is not enabled on this server.");
                 return true;
             }
-
-            String discordUsername = args[1];
-            String[] discordParts = discordUsername.split("#");
             
-            // Check if Discord username is in the correct format
-            if (discordParts.length != 2 || discordParts[0].isEmpty() || discordParts[1].length() != 4) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                    plugin.getConfig().getString("messages.prefix") + 
-                    plugin.getConfig().getString("messages.discord-invalid-username")));
+            // Generate a verification code
+            String code = generateVerificationCode(player.getUniqueId());
+            if (code == null) {
+                player.sendMessage(ChatColor.RED + "Failed to generate verification code. Please try again later.");
                 return true;
             }
-
-            // Check if Discord account is already linked to another player
-            if (plugin.getDatabaseManager().isDiscordAccountLinked(discordUsername)) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                    plugin.getConfig().getString("messages.prefix") + 
-                    plugin.getConfig().getString("messages.discord-already-linked")));
-                return true;
-            }
-
-            // Generate and send verification code
-            String verificationCode = discordBot.generateVerificationCode(uuid);
-            if (verificationCode == null) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                    plugin.getConfig().getString("messages.prefix") + 
-                    plugin.getConfig().getString("messages.discord-verification-failed")));
-                return true;
-            }
-
-            // Send DM to the user with the verification code
-            String discordId = discordParts[0];
-            discordBot.sendVerificationMessage(discordId, verificationCode);
             
-            // Send success message to player
-            String successMessage = plugin.getConfig().getString("messages.discord-verify-instructions")
-                .replace("%code%", verificationCode);
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                plugin.getConfig().getString("messages.prefix") + successMessage));
-            
+            // Send instructions to the player
+            player.sendMessage(ChatColor.GREEN + "Please check your DMs from the Discord bot and use the following command there:");
+            player.sendMessage(ChatColor.YELLOW + "/verify " + code);
+            return true;
         } else if (args[0].equalsIgnoreCase("unlink")) {
-            // Handle unlinking Discord account
-            if (plugin.getDatabaseManager().unlinkDiscordAccount(uuid)) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                    plugin.getConfig().getString("messages.prefix") + 
-                    plugin.getConfig().getString("messages.discord-unlinked")));
-            } else {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                    plugin.getConfig().getString("messages.prefix") + 
-                    plugin.getConfig().getString("messages.discord-not-linked")));
+            // Unlink Discord account
+            String sql = "UPDATE players SET discord_id = NULL WHERE uuid = ?";
+            try (var conn = plugin.getDatabaseManager().getConnection();
+                 var stmt = conn.prepareStatement(sql)) {
+                stmt.setString(1, player.getUniqueId().toString());
+                int updated = stmt.executeUpdate();
+                
+                if (updated > 0) {
+                    player.sendMessage(ChatColor.GREEN + "Successfully unlinked your Discord account!");
+                } else {
+                    player.sendMessage(ChatColor.RED + "No Discord account was linked to your Minecraft account.");
+                }
+            } catch (Exception e) {
+                plugin.getLogger().severe("Failed to unlink Discord account: " + e.getMessage());
+                player.sendMessage(ChatColor.RED + "Failed to unlink your Discord account. Please try again later.");
             }
         } else {
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', 
-                plugin.getConfig().getString("messages.prefix") + 
-                "&cUsage: /discord <link|unlink> [discord-username]"));
+            player.sendMessage(ChatColor.RED + "Unknown subcommand. Use /discord link or /discord unlink");
         }
-
+        
         return true;
     }
 }
