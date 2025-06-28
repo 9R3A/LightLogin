@@ -19,7 +19,7 @@ A secure and feature-rich login plugin for Minecraft servers with Discord integr
 
 ## Installation
 
-1. Download the latest release from the [releases page]()
+1. Download the latest release from the [releases page](https://github.com/9R3A/LightLogin/releases)
 2. Place the `LightLogin.jar` in your server's `plugins` folder
 3. Start your server to generate the default config
 4. Edit the `plugins/LightLogin/config.yml` to your liking
